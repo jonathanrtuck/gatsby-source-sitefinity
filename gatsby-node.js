@@ -1,10 +1,9 @@
-import {error, success} from './console';
+const {error, success} = require('./console');
 
-import axios from 'axios';
-import crypto from 'crypto';
+const axios = require('axios');
+const crypto = require('crypto');
 
 /**
- * @constant
  * @function
  * @param {object} obj
  * @param {object} obj.actions
@@ -15,7 +14,7 @@ import crypto from 'crypto';
  * @see https://www.gatsbyjs.org/docs/source-plugin-tutorial/
  * @see https://www.gatsbyjs.org/docs/node-apis/#sourceNodes
  */
-export const sourceNodes = ({actions, createNodeId}, {url}) => {
+exports.sourceNodes = ({actions, createNodeId}, {url}) => {
   /**
    * validate configuration options.
    */
