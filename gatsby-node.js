@@ -4,6 +4,7 @@ import axios from 'axios';
 import crypto from 'crypto';
 
 /**
+ * @constant
  * @function
  * @param {object} obj
  * @param {object} obj.actions
@@ -14,7 +15,7 @@ import crypto from 'crypto';
  * @see https://www.gatsbyjs.org/docs/source-plugin-tutorial/
  * @see https://www.gatsbyjs.org/docs/node-apis/#sourceNodes
  */
-exports.sourceNodes = ({actions, createNodeId}, {url}) => {
+export const sourceNodes = ({actions, createNodeId}, {url}) => {
   /**
    * validate configuration options.
    */
