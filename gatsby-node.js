@@ -1,23 +1,7 @@
-const axios = require('axios');
-const crypto = require('crypto');
+import {error, success} from './console';
 
-/**
- * @constant
- * @function
- * @param {string} str
- */
-const error = (str) => {
-  console.error('\x1b[31m%s\x1b[0m', '\nerror', str);
-};
-
-/**
- * @constant
- * @function
- * @param {string} str
- */
-const success = (str) => {
-  console.log('\x1b[32m%s\x1b[0m', '\nsuccess', str);
-};
+import axios from 'axios';
+import crypto from 'crypto';
 
 /**
  * @function
@@ -88,7 +72,7 @@ exports.sourceNodes = ({actions, createNodeId}, {url}) => {
        * @function
        * @param {object[]} responses
        */
-      (responses) =>
+      (responses) => {
         responses
           .reduce(
             /**
@@ -132,22 +116,28 @@ exports.sourceNodes = ({actions, createNodeId}, {url}) => {
              * @function
              * @param {object} obj
              */
-            (obj) => createNode(obj)
-          )
+            (obj) => {
+              createNode(obj);
+            }
+          );
+      }
     )
     .then(
       /**
        * @function
        */
-      () => success('create sitefinity content nodes')
+      () => {
+        success('create sitefinity content nodes');
+      }
     )
     .catch(
       /**
        * @function
        */
-      () =>
+      () => {
         error(
           'cannot get content from sitefinity. have you provided the correct url in the gatsby-source-sitefinity plugin in gatsby-config.js?'
-        )
+        );
+      }
     );
 };

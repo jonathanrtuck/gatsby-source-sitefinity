@@ -3,6 +3,7 @@
     "axios": "^0.18.0"
   },
   "devDependencies": {
+    "eslint": "^5.9.0",
     "prettier": "^1.15.2"
   },
   "engines": {

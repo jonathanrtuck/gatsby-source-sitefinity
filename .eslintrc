@@ -1,0 +1,27 @@
+{
+  "env": {
+    "amd": true,
+    "browser": true,
+    "es6": true
+  },
+  "parserOptions": {
+    "ecmaFeatures": {
+      "experimentalObjectRestSpread": true
+    },
+    "sourceType": "module"
+  },
+  "rules": {
+    "quotes": ["error", "single", {"avoidEscape": true}],
+    "valid-jsdoc": [
+      "warn",
+      {
+        "prefer": {
+          "return": "returns"
+        },
+        "requireParamDescription": false,
+        "requireReturn": false,
+        "requireReturnDescription": false
+      }
+    ]
+  }
+}
