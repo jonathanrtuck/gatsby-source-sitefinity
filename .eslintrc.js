@@ -11,6 +11,7 @@ module.exports = {
     sourceType: 'module',
   },
   rules: {
+    indent: [2, 2, {SwitchCase: 1}],
     'no-console': 'off',
     quotes: ['error', 'single', {avoidEscape: true}],
     'valid-jsdoc': [
