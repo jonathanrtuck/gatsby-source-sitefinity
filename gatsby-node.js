@@ -1,7 +1,8 @@
-const {error, success} = require('./console');
-
 const axios = require('axios');
+const camelCase = require('lodash/camelCase');
 const crypto = require('crypto');
+const {error, success} = require('./console');
+const upperFirst = require('lodash/upperFirst');
 
 /**
  * @function
@@ -102,7 +103,7 @@ exports.sourceNodes = ({actions, createNodeId}, {url}) => {
                         .update(JSON.stringify(obj))
                         .digest('hex'),
                       // mediaType: obj.MimeType,
-                      type: `Sitefinity${response.config._type}`, // prepend to avoid naming collisions with other source plugins
+                      type: `Sitefinity${upperFirst(camelCase(response.config._type))}`, // prepend to avoid naming collisions with other source plugins
                     },
                     parent: null,
                   })
