@@ -21,5 +21,5 @@
     "gatsby": ">2.0.0-alpha"
   },
   "repository": "https://github.com/jonathanrtuck/gatsby-source-sitefinity",
-  "version": "0.3.3"
+  "version": "1.0.0"
 }
