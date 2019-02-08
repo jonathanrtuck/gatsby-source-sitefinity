@@ -1,7 +1,12 @@
 const axios = require('axios');
 const camelCase = require('lodash/camelCase');
 const crypto = require('crypto');
-const {error, success} = require('./console');
+const { error, success } = require('./console');
+const every = require('lodash/every');
+const isArray = require('lodash/isArray');
+const isEmpty = require('lodash/isEmpty');
+const isString = require('lodash/isString');
+const isUndefined = require('lodash/isUndefined');
 const upperFirst = require('lodash/upperFirst');
 
 /**
@@ -10,24 +15,43 @@ const upperFirst = require('lodash/upperFirst');
  * @param {object} obj.actions
  * @param {function} obj.createNodeId
  * @param {object} configOptions
+ * @param {string[]} [configOptions.languages]
  * @param {string} configOptions.url
  * @returns {Promise}
  * @see https://www.gatsbyjs.org/docs/source-plugin-tutorial/
  * @see https://www.gatsbyjs.org/docs/node-apis/#sourceNodes
  */
-exports.sourceNodes = ({actions, createNodeId}, {url}) => {
+exports.sourceNodes = ({ actions, createNodeId }, { languages, url }) => {
   /**
-   * validate configuration options.
+   * validate url configuration option.
    */
-  if (typeof url !== 'string' || url === '') {
-    return error('you must provide a sitefinity api url in the gatsby-source-sitefinity plugin in gatsby-config.js');
+  if (!isString(url) || isEmpty(url)) {
+    return error(
+      'you must provide a sitefinity api url in the gatsby-source-sitefinity plugin in gatsby-config.js'
+    );
+  }
+
+  /**
+   * @constant
+   * @type {boolean}
+   */
+  const hasLanguages =
+    isArray(languages) && !isEmpty(languages) && every(languages, isString);
+
+  /**
+   * validate languages configuration option.
+   */
+  if (!isUndefined(languages) && !hasLanguages) {
+    return error(
+      `invalid languages option: ${languages}. must be a string array.`
+    );
   }
 
   /**
    * @constant
    * @type {function}
    */
-  const {createNode} = actions;
+  const { createNode } = actions;
   /**
    * remove trailing slash.
    * @constant
@@ -52,17 +76,42 @@ exports.sourceNodes = ({actions, createNodeId}, {url}) => {
       (response) =>
         axios.all(
           response.data.value
-            .map(
+            .reduce(
               /**
-               * create axios configuration. save 'name' property value for use as content type identifier.
                * @function
+               * @param {object[]} requests
                * @param {object} obj
-               * @returns {object}
+               * @param {string} obj.name
+               * @param {string} obj.url
+               * @returns {object[]}
                */
-              (obj) => ({
-                _type: obj.name,
-                url: `${siteUrl}/${obj.url}?$expand=*`,
-              })
+              (requests, { name, url }) => {
+                if (hasLanguages) {
+                  return requests.concat(
+                    languages.map(
+                      /**
+                       * @function
+                       * @param {string} language
+                       * @returns {object}
+                       */
+                      (language) => ({
+                        _language: language,
+                        _type: name,
+                        url: `${siteUrl}/${url}?$expand=*&sf_culture=${language}`,
+                      })
+                    )
+                  );
+                }
+
+                return [
+                  ...requests,
+                  {
+                    _type: name,
+                    url: `${siteUrl}/${url}?$expand=*`,
+                  },
+                ];
+              },
+              []
             )
             .map(axios)
         )
@@ -81,32 +130,53 @@ exports.sourceNodes = ({actions, createNodeId}, {url}) => {
              * @function
              * @param {object[]} arr
              * @param {object} response
+             * @param {object} response.config
+             * @param {object} response.data
              * @returns {object[]}
              */
-            (arr, response) =>
+            (arr, { config, data }) =>
               arr.concat(
-                response.data.value.map(
+                data.value.map(
                   /**
                    * add getsby node properties.
                    * @function
                    * @param {object} obj
                    * @returns {object}
                    */
-                  (obj) => ({
-                    ...obj,
-                    children: [],
-                    id: createNodeId(obj.Id),
-                    internal: {
-                      content: JSON.stringify(obj),
-                      contentDigest: crypto
-                        .createHash('md5')
-                        .update(JSON.stringify(obj))
-                        .digest('hex'),
-                      // mediaType: obj.MimeType,
-                      type: `Sitefinity${upperFirst(camelCase(response.config._type))}`, // prepend to avoid naming collisions with other source plugins
-                    },
-                    parent: null,
-                  })
+                  (obj) => {
+                    /**
+                     * @constant
+                     * @type {object}
+                     */
+                    const node = {
+                      ...obj,
+                      children: [],
+                      id: createNodeId(
+                        `sitefinity-${obj.Id}-${config._language}`
+                      ),
+                      internal: {
+                        content: JSON.stringify(obj),
+                        contentDigest: crypto
+                          .createHash('md5')
+                          .update(JSON.stringify(obj))
+                          .digest('hex'),
+                        // prepend to avoid naming collisions with other source plugins
+                        type: `Sitefinity${upperFirst(
+                          camelCase(config._type)
+                        )}`,
+                      },
+                      parent: null,
+                    };
+
+                    if (hasLanguages) {
+                      return {
+                        ...node,
+                        language: config._language,
+                      };
+                    }
+
+                    return node;
+                  }
                 )
               ),
             []
