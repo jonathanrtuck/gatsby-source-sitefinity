@@ -29,7 +29,7 @@ module.exports = {
 ## Options
 
 - ### `url` (_required_)
-- ### `language`
+- ### `languages`
   - Used to set the `sf_culture` url parameter.
   - If absent, nodes will be created for all content items of the _default language_.
   - If present, nodes will be created for all content items of _all languages_ passed. Example query:
