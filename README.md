@@ -18,6 +18,7 @@ module.exports = {
       options: {
         languages: [{ LANGUAGE CODE }, { LANGUAGE CODE }, …],
         url: '{ DOMAIN }/api/{ SITE }',
+        pageSize: Number
       },
     },
   ],
@@ -45,3 +46,6 @@ module.exports = {
       }
     }
     ```
+- ### `pageSize`
+  - Used to set `$top` url parameter.
+  - if absent, by default the size will be 50 items

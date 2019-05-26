@@ -17,11 +17,15 @@ const upperFirst = require('lodash/upperFirst');
  * @param {object} configOptions
  * @param {string[]} [configOptions.languages]
  * @param {string} configOptions.url
+ * @param {number} configOptions.pageSize
  * @returns {Promise}
  * @see https://www.gatsbyjs.org/docs/source-plugin-tutorial/
  * @see https://www.gatsbyjs.org/docs/node-apis/#sourceNodes
  */
-exports.sourceNodes = ({ actions, createNodeId }, { languages, url }) => {
+exports.sourceNodes = (
+  { actions, createNodeId },
+  { languages, url, pageSize = 50 }
+) => {
   /**
    * validate url configuration option.
    */
@@ -68,6 +72,38 @@ exports.sourceNodes = ({ actions, createNodeId }, { languages, url }) => {
   })
     .then(
       /**
+       * create and fire count request for each content type.
+       * @function
+       * @param {object} response
+       * @returns {Promise}
+       */
+
+      (response) =>
+        axios.all(
+          response.data.value
+            .reduce((requests, { name, url }) => {
+              if (hasLanguages) {
+                return requests.concat(
+                  languages.map((language) => ({
+                    _language: language,
+                    _type: name,
+                    url: `${siteUrl}/${url}/$count?sf_culture=${language}`,
+                  }))
+                );
+              }
+              return [
+                ...requests,
+                {
+                  _type: name,
+                  url: `${siteUrl}/${url}/$count`,
+                },
+              ];
+            }, [])
+            .map(axios)
+        )
+    )
+    .then(
+      /**
        * create and fire request for each content type.
        * @function
        * @param {object} response
@@ -75,7 +111,7 @@ exports.sourceNodes = ({ actions, createNodeId }, { languages, url }) => {
        */
       (response) =>
         axios.all(
-          response.data.value
+          response
             .reduce(
               /**
                * @function
@@ -85,30 +121,41 @@ exports.sourceNodes = ({ actions, createNodeId }, { languages, url }) => {
                * @param {string} obj.url
                * @returns {object[]}
                */
-              (requests, { name, url }) => {
+              (requests, { config, data }) => {
+                // calculate number of requests based on total count, page size for each language if provided
+                let skip = 0;
+                const top = pageSize;
+                const totalCount = data;
+                const totalRequestsCount = Math.ceil(totalCount / top);
                 if (hasLanguages) {
                   return requests.concat(
-                    languages.map(
-                      /**
-                       * @function
-                       * @param {string} language
-                       * @returns {object}
-                       */
-                      (language) => ({
-                        _language: language,
-                        _type: name,
-                        url: `${siteUrl}/${url}?$expand=*&sf_culture=${language}`,
-                      })
-                    )
+                    ...[...Array(totalRequestsCount)].map((_, i) => {
+                      const currentPageRequest = {
+                        _language: config._language,
+                        _type: config._type,
+                        url: `${siteUrl}/${
+                          config._type
+                        }?$skip=${skip}&$top=${top}&$expand=*&sf_culture=${
+                          config._language
+                        }`,
+                      };
+                      skip += pageSize;
+                      return currentPageRequest;
+                    })
                   );
                 }
 
                 return [
-                  ...requests,
-                  {
-                    _type: name,
-                    url: `${siteUrl}/${url}?$expand=*`,
-                  },
+                  ...[...Array(totalRequestsCount)].map((_, i) => {
+                    const currentPageRequest = {
+                      _type: config._type,
+                      url: `${siteUrl}/${
+                        config._type
+                      }?$skip=${skip}&$top=${top}&$expand=*`,
+                    };
+                    skip += pageSize;
+                    return currentPageRequest;
+                  }),
                 ];
               },
               []
@@ -205,7 +252,7 @@ exports.sourceNodes = ({ actions, createNodeId }, { languages, url }) => {
       /**
        * @function
        */
-      () => {
+      (error) => {
         error(
           'cannot get content from sitefinity. have you provided the correct url in the gatsby-source-sitefinity plugin in gatsby-config.js?'
         );
