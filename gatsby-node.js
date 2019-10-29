@@ -335,10 +335,10 @@ exports.sourceNodes = (
             );
           } else {
             error(
-              `cannot get content from sitefinity. ${JSON.stringify(
-                ex.message
-              )}`
+              `cannot get content from sitefinity. ${(ex.message,
+              ex.request.path)}`
             );
+            throw ex;
           }
         }
       );
