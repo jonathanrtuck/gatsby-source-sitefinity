@@ -22,13 +22,14 @@ const upperFirst = require('lodash/upperFirst');
  * @param {string[]} configOptions.types
  * @param {object} configOptions.authentication
  * @param {number} configOptions.pageSize
+ * @param {boolean} configOptions.pagination
  * @returns {Promise}
  * @see https://www.gatsbyjs.org/docs/source-plugin-tutorial/
  * @see https://www.gatsbyjs.org/docs/node-apis/#sourceNodes
  */
 exports.sourceNodes = (
   { actions, createNodeId },
-  { languages, baseUrl, serviceName, types, authentication, pageSize = 50 },
+  { languages, baseUrl, serviceName, types, authentication, pageSize = 50, pagination = true },
   cb
 ) => {
   axios.interceptors.request.use((request) => {
@@ -155,8 +156,8 @@ exports.sourceNodes = (
         (response) => {
           const toBeQueriedTypes = hasTypes
             ? response.data.value.filter((item) => {
-                return types.indexOf(item.name) !== -1;
-              })
+              return types.indexOf(item.name) !== -1;
+            })
             : response.data.value;
 
           return axios.all(
@@ -207,14 +208,16 @@ exports.sourceNodes = (
                   let skip = 0;
                   const top = pageSize;
                   const totalCount = data;
-                  const totalRequestsCount = Math.ceil(totalCount / top);
+                  const totalRequestsCount = pagination ? Math.ceil(totalCount / top) : 1;
                   if (hasLanguages) {
                     return requests.concat(
                       ...[...Array(totalRequestsCount)].map((_, i) => {
+                        const url = pagination ? `${siteUrl}/${config._type}?$skip=${skip}&$top=${top}&$expand=*&sf_culture=${config._language}` :
+                          `${siteUrl}/${config._type}?$expand=*&sf_culture=${config._language}`;
                         const currentPageRequest = {
                           _language: config._language,
                           _type: config._type,
-                          url: `${siteUrl}/${config._type}?$skip=${skip}&$top=${top}&$expand=*&sf_culture=${config._language}`,
+                          url: url,
                         };
                         skip += pageSize;
                         return currentPageRequest;
@@ -224,9 +227,11 @@ exports.sourceNodes = (
 
                   return [
                     ...[...Array(totalRequestsCount)].map((_, i) => {
+                      const url = pagination ? `${siteUrl}/${config._type}?$skip=${skip}&$top=${top}&$expand=*` :
+                        `${siteUrl}/${config._type}?$expand=*`;
                       const currentPageRequest = {
                         _type: config._type,
-                        url: `${siteUrl}/${config._type}?$skip=${skip}&$top=${top}&$expand=*`,
+                        url: url,
                       };
                       skip += pageSize;
                       return currentPageRequest;
@@ -357,7 +362,7 @@ exports.sourceNodes = (
          * @function
          */
         (ex) => {
-          error(`cannot get content from sitefinity. ${JSON.stringify(ex)}`);
+          error(`cannot get content from sitefinity. ${ex.message, ex.request.path, ex.stack}`);
         }
       );
   } else {
