@@ -339,9 +339,10 @@ exports.sourceNodes = (
               `cannot get content from sitefinity. ${ex.message} , please provide correct username and password`
             );
           } else {
+            const path = ex.request && ex.request.path ? ex.request.path : 'path unavailable';
             error(
               `cannot get content from sitefinity. ${(ex.message,
-              ex.request.path)}`
+                path)}`
             );
             throw ex;
           }
@@ -362,7 +363,8 @@ exports.sourceNodes = (
          * @function
          */
         (ex) => {
-          error(`cannot get content from sitefinity. ${ex.message, ex.request.path, ex.stack}`);
+          const path = ex.request && ex.request.path ? ex.request.path : 'path unavailable';
+          error(`cannot get content from sitefinity. ${ex.message, path, ex.stack}`);
         }
       );
   } else {
