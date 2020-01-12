@@ -33,7 +33,6 @@ exports.sourceNodes = (
   cb
 ) => {
   axios.interceptors.request.use((request) => {
-    console.log('Starting Request', request.url, request.data);
     return request;
   });
 
