@@ -22,6 +22,6 @@
   "peerDependencies": {
     "gatsby": ">2.0.0-alpha"
   },
-  "repository": "https://github.com/jonathanrtuck/gatsby-source-sitefinity",
-  "version": "1.1.0"
+  "repository": "https://github.com/PrototypeInteractive/gatsby-source-sitefinity",
+  "version": "1.2.0"
 }

@@ -18,6 +18,7 @@ module.exports = {
       options: {
         languages: [{ LANGUAGE CODE }, { LANGUAGE CODE }, …],
         url: '{ DOMAIN }/api/{ SITE }',
+        pageSize: Number
       },
     },
   ],
@@ -28,7 +29,28 @@ module.exports = {
 
 ## Options
 
-- ### `url` (_required_)
+- ### `baseUrl` (_required_)
+  - define your sitefinity Instance URL
+- ### `serviceName` (_required_)
+   - define your sitefinity service name
+- ### `types`
+   - use it in case you want to whitelist types to be processed by the plugin
+   - example `["pages","news"]`
+- ### `authentication`
+   - use it in case you want to use sitefinity APIs with authentication required, if not present the plugin will consider that the APIs are public
+   - for more information how to setup sitefinity authentication follow this link `https://www.progress.com/documentation/sitefinity-cms/authentication-and-web-services`
+   - authentication object must contain the following properties 
+    
+| name 	| description 	|
+|---------------	|-----------------------------------	|
+| username 	| provide sitefinity username/email 	|
+| password 	| sitefinity user password to login 	|
+| client_id 	| your API client ID 	|
+| client_secret 	| your API client secret 	|
+
+    
+
+ 
 - ### `languages`
   - Used to set the `sf_culture` url parameter.
   - If absent, nodes will be created for all content items of the _default language_.
@@ -45,3 +67,6 @@ module.exports = {
       }
     }
     ```
+- ### `pageSize`
+  - Used to set `$top` url parameter.
+  - if absent, by default the size will be 50 items
